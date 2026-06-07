@@ -1,0 +1,41 @@
+---
+title: "Authentication"
+description: "Generate an API key and authenticate every request."
+---
+
+Every request to the Mailchimp Transactional API is authenticated with an API key. There are no OAuth flows or request signing — you pass your key with each call.
+
+## Generating a key
+
+1. Log in to your [Mandrill account](https://mandrillapp.com/).
+2. Open **Settings** from the left navigation.
+3. Select **+ New API Key**.
+4. Give the key a label and choose its permissions, then copy the generated value.
+
+<Tip>
+  Create separate keys for each environment and service. Scoping keys narrowly limits the blast radius if one is ever leaked, and the per-key analytics make it easy to see which system sent what.
+</Tip>
+
+## Using your key
+
+Include your key in the body of every request as the `key` parameter:
+
+```json
+{
+  "key": "md-xxxxxxxxxxxxxxxxxxxxxx",
+  "message": { }
+}
+```
+
+## Required permissions
+
+Different endpoints require different permissions. Two of the most common:
+
+| Action | Permission |
+| --- | --- |
+| Send a raw message | `Messages > Send` |
+| Send using a template | `Templates > List`, `Messages > Send-Template` |
+
+## Rotating keys
+
+If a key is compromised, generate a replacement first, deploy it, then delete the old key. Because keys are passed per request, rotation requires no downtime.

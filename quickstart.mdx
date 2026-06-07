@@ -1,0 +1,68 @@
+---
+title: "Quickstart"
+description: "Send your first transactional email in under five minutes."
+---
+
+This guide walks you through sending your first message. By the end you'll have a working API call you can drop into your application.
+
+<Steps>
+  <Step title="Get your API key">
+    Log in to your [Mandrill account](https://mandrillapp.com/), open **Settings**, and select **+ New API Key**. Copy the key somewhere safe — you'll need it for every request.
+
+    <Warning>
+      Treat your API key like a password. Never commit it to source control or expose it in client-side code.
+    </Warning>
+  </Step>
+  <Step title="Send a test message">
+    Make a request to the `/messages/send` endpoint with your key and a message object:
+
+    ```bash
+    curl -X POST https://mandrillapp.com/api/1.0/messages/send \
+      -H "Content-Type: application/json" \
+      -d '{
+        "key": "YOUR_API_KEY",
+        "message": {
+          "from_email": "orders@example.com",
+          "from_name": "Example Store",
+          "subject": "Your order has shipped",
+          "html": "<p>Hi Jordan, your order #1043 has shipped.</p>",
+          "to": [
+            { "email": "jordan@example.com", "name": "Jordan Lee", "type": "to" }
+          ],
+          "track_opens": true,
+          "track_clicks": true
+        }
+      }'
+    ```
+  </Step>
+  <Step title="Check the response">
+    A successful send returns an array with one entry per recipient:
+
+    ```json
+    [
+      {
+        "email": "jordan@example.com",
+        "status": "sent",
+        "_id": "abc123abc123abc123abc123",
+        "reject_reason": null
+      }
+    ]
+    ```
+
+    A `status` of `sent` or `queued` means delivery is underway. Save the `_id` if you want to look the message up later with [`/messages/info`](/api-reference/messages/info).
+  </Step>
+  <Step title="Confirm delivery">
+    Open the recipient inbox, or call `/messages/info` with the returned `_id` to see opens and clicks as they happen.
+  </Step>
+</Steps>
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Use templates" icon="layer-group" href="/guides/templates">
+    Stop hardcoding HTML. Manage reusable templates with merge variables.
+  </Card>
+  <Card title="Track events" icon="webhook" href="/guides/webhooks">
+    Push delivery, open, and click events to your own systems.
+  </Card>
+</CardGroup>
