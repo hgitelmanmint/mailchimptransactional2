@@ -1,0 +1,35 @@
+---
+title: "Migrating from 1.0"
+description: "Move from the legacy 1.0 API to the current version with confidence."
+---
+
+If you're on the original 1.0 API, this guide covers what changed and how to upgrade safely. Most integrations migrate in an afternoon.
+
+<Info>
+  Version 1.0 remains supported. You can migrate one endpoint at a time — there's no need for a single cutover.
+</Info>
+
+## What changed
+
+<Steps>
+  <Step title="Structured send results">
+    Responses now return a consistent per-recipient result object with a stable `_id`. Code that parsed the older flat response should read the new array.
+  </Step>
+  <Step title="Expanded webhook events">
+    Newer event types like `soft_bounce` and `spam` are available. Existing event subscriptions continue to work unchanged.
+  </Step>
+  <Step title="Template content arrays">
+    Template sends accept a structured `template_content` array for editable regions, replacing the older inline approach.
+  </Step>
+</Steps>
+
+## Recommended upgrade path
+
+1. Point a single non-critical message type at the new version.
+2. Confirm send results and webhook events parse correctly in your systems.
+3. Roll the remaining message types over one at a time.
+4. Once all traffic is migrated, update your monitoring to the new response shape.
+
+## Need a hand?
+
+Check the [Changelog](/changelog) for the full list of changes between versions, or reach out through [developer support](https://mailchimp.com/developer/support/).
