@@ -1,4 +1,112 @@
 ---
-title: "Send using a template"
-openapi: "POST /messages/send-template"
+title: "POST /messages/send-template — Send via Template"
+sidebarTitle: "Send Template"
+description: "POST /messages/send-template — send a transactional message using a stored template. Accepts template name, content slots, and merge variables."
 ---
+
+`POST /messages/send-template` sends a message using a pre-built template from your account, injecting dynamic content into editable regions and merge variables at send time. This approach keeps your layout and branding in the template while your application supplies only the personalised data for each send.
+
+`POST https://mandrillapp.com/api/1.0/messages/send-template`
+
+## Request body
+
+<ParamField body="key" type="string" required>
+  Your API key.
+</ParamField>
+
+<ParamField body="template_name" type="string" required>
+  The immutable name (slug) of the template to use. Find this on the Templates page in the dashboard.
+</ParamField>
+
+<ParamField body="template_content" type="array" required>
+  Array of objects filling the template's editable `mc:edit` regions. Each object has `name` (the region name) and `content` (HTML to inject). Pass an empty array `[]` if the template has no editable regions.
+</ParamField>
+
+<ParamField body="message" type="object" required>
+  The message object. Same fields as `/messages/send`, plus merge variable fields.
+  <Expandable title="message fields">
+    <ParamField body="from_email" type="string" required>
+      Sender email address. Must be on a verified domain.
+    </ParamField>
+    <ParamField body="from_name" type="string">
+      Display name shown as the sender.
+    </ParamField>
+    <ParamField body="subject" type="string">
+      Overrides the template's subject line. Optional.
+    </ParamField>
+    <ParamField body="to" type="array" required>
+      Array of recipient objects with `email`, `name`, and `type` ("to", "cc", "bcc").
+    </ParamField>
+    <ParamField body="global_merge_vars" type="array">
+      Array of `{name, content}` objects applied to all recipients.
+    </ParamField>
+    <ParamField body="merge_vars" type="array">
+      Per-recipient merge variable overrides. Array of `{rcpt, vars}` where `vars` is an array of `{name, content}`.
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+## Response
+
+The response is an array with one entry per recipient — the same structure as `/messages/send`.
+
+<ResponseField name="email" type="string">
+  The email address of the recipient.
+</ResponseField>
+
+<ResponseField name="status" type="string">
+  Delivery status: `sent`, `queued`, `scheduled`, `rejected`, or `invalid`.
+</ResponseField>
+
+<ResponseField name="_id" type="string">
+  Unique message ID. Use this to look up delivery details with `/messages/info`.
+</ResponseField>
+
+<ResponseField name="reject_reason" type="string | null">
+  If `status` is `rejected`, this explains why: `hard-bounce`, `soft-bounce`, `spam`, `unsub`, `custom`, `invalid-sender`, `invalid`, `test-mode-limit`, `unsigned`, `rule`.
+</ResponseField>
+
+## Example
+
+```bash
+curl -X POST https://mandrillapp.com/api/1.0/messages/send-template \
+  -H "Content-Type: application/json" \
+  -d '{
+    "key": "YOUR_API_KEY",
+    "template_name": "order-confirmation",
+    "template_content": [
+      { "name": "main", "content": "<h1>Thanks for your order!</h1>" }
+    ],
+    "message": {
+      "from_email": "orders@yourdomain.com",
+      "from_name": "Your Store",
+      "subject": "Your order is confirmed",
+      "to": [
+        { "email": "jordan@example.com", "name": "Jordan Lee", "type": "to" }
+      ],
+      "global_merge_vars": [
+        { "name": "COMPANY", "content": "Your Store" }
+      ],
+      "merge_vars": [
+        {
+          "rcpt": "jordan@example.com",
+          "vars": [
+            { "name": "FNAME", "content": "Jordan" },
+            { "name": "ORDER_ID", "content": "#1043" }
+          ]
+        }
+      ]
+    }
+  }'
+```
+
+```json
+[
+  {
+    "email": "jordan@example.com",
+    "status": "sent",
+    "_id": "abc123abc123abc123abc123",
+    "reject_reason": null
+  }
+]
+```

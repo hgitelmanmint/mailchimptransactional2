@@ -1,110 +1,69 @@
 {
   "$schema": "https://mintlify.com/docs.json",
-  "theme": "mint",
+  "theme": "luma",
   "name": "Mailchimp Transactional",
   "description": "Send transactional email and SMS at scale with the Mailchimp Transactional API.",
   "colors": {
-    "primary": "#FFE01B",
-    "light": "#FFE01B",
-    "dark": "#241C15"
+    "primary": "#040404",
+    "light": "#f35d25",
+    "dark": "#f7ac8b"
   },
-  "favicon": "/favicon.svg",
+  "favicon": "https://media.brand.dev/3841502d-48e3-40f3-8da8-99323a53ba90.png",
   "logo": {
-    "light": "/logo/light.svg",
-    "dark": "/logo/dark.svg"
+    "light": "https://media.brand.dev/664032a3-2c9c-4a95-9b94-eda1d4e0eb20.svg",
+    "dark": "https://media.brand.dev/664032a3-2c9c-4a95-9b94-eda1d4e0eb20.svg"
   },
   "navigation": {
-    "versions": [
+    "tabs": [
       {
-        "version": "1.3",
-        "tabs": [
+        "tab": "Documentation",
+        "groups": [
           {
-            "tab": "Documentation",
-            "groups": [
-              {
-                "group": "Get Started",
-                "pages": [
-                  "index",
-                  "quickstart",
-                  "authentication"
-                ]
-              },
-              {
-                "group": "Guides",
-                "pages": [
-                  "guides/sending-email",
-                  "guides/templates",
-                  "guides/webhooks",
-                  "guides/migrating-from-1-0"
-                ]
-              }
+            "group": "Get Started",
+            "pages": [
+              "index",
+              "quickstart",
+              "authentication"
             ]
           },
           {
-            "tab": "API Reference",
-            "groups": [
-              {
-                "group": "Messages",
-                "openapi": "/api-reference/openapi.json",
-                "pages": [
-                  "api-reference/messages/send",
-                  "api-reference/messages/send-template",
-                  "api-reference/messages/info"
-                ]
-              },
-              {
-                "group": "Webhooks",
-                "openapi": "/api-reference/openapi.json",
-                "pages": [
-                  "api-reference/webhooks/list",
-                  "api-reference/webhooks/add"
-                ]
-              }
-            ]
-          },
-          {
-            "tab": "Changelog",
-            "groups": [
-              {
-                "group": "Changelog",
-                "pages": [
-                  "changelog"
-                ]
-              }
+            "group": "Guides",
+            "pages": [
+              "guides/sending-email",
+              "guides/templates",
+              "guides/webhooks",
+              "guides/migrating-from-1-0"
             ]
           }
         ]
       },
       {
-        "version": "1.1",
-        "tabs": [
+        "tab": "API Reference",
+        "groups": [
           {
-            "tab": "Documentation",
-            "groups": [
-              {
-                "group": "Get Started",
-                "pages": [
-                  "index",
-                  "quickstart",
-                  "authentication"
-                ]
-              }
+            "group": "Messages",
+            "pages": [
+              "api-reference/messages/send",
+              "api-reference/messages/send-template",
+              "api-reference/messages/info"
+            ]
+          },
+          {
+            "group": "Webhooks",
+            "pages": [
+              "api-reference/webhooks/list",
+              "api-reference/webhooks/add"
             ]
           }
         ]
       },
       {
-        "version": "1.0",
-        "tabs": [
+        "tab": "Changelog",
+        "groups": [
           {
-            "tab": "Documentation",
-            "groups": [
-              {
-                "group": "Get Started",
-                "pages": [
-                  "index"
-                ]
-              }
+            "group": "Changelog",
+            "pages": [
+              "changelog"
             ]
           }
         ]

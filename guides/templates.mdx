@@ -1,51 +1,128 @@
 ---
-title: "Templates"
-description: "Send consistent, maintainable email with reusable templates and merge variables."
+title: "Send Emails Using Reusable Templates"
+sidebarTitle: "Templates"
+description: "Create reusable email templates in the Mandrill dashboard, personalize them with merge variables, and send them via the /messages/send-template endpoint."
 ---
 
-Hardcoding HTML in every API call gets unwieldy fast. Templates let your team manage email content separately from your application code, and merge variables personalize each send.
+This guide covers how to create and use reusable email templates in Mailchimp Transactional, including dynamic merge variables that let you personalize each message at send time without rebuilding your HTML for every request.
 
-## Why templates
+## Creating a template
 
-<CardGroup cols={2}>
-  <Card title="Maintainability" icon="wrench">
-    Update the look of your receipts without shipping a code change.
-  </Card>
-  <Card title="Consistency" icon="equals">
-    Every order confirmation uses the same approved layout.
-  </Card>
-</CardGroup>
+<Steps>
+  <Step title="Open the Templates page">
+    Log in to [mandrillapp.com](https://mandrillapp.com/), navigate to **Templates**, and click **New Template**.
+  </Step>
+  <Step title="Name your template">
+    Give the template a name — this becomes its slug (for example, `order-confirmation`). The name is used to reference the template in API calls and **cannot be changed after creation**.
+  </Step>
+  <Step title="Write your HTML">
+    Author the template's HTML body. Use `*|MERGE_VAR_NAME|*` syntax anywhere you want to inject dynamic content at send time:
 
-## Sending with a template
+    ```html
+    <p>Hi *|FNAME|*, your order *|ORDER_ID|* has shipped.</p>
+    ```
+  </Step>
+  <Step title="Add editable regions">
+    Wrap sections you want to override at send time in a `<div>` with the `mc:edit` attribute. The value you give the attribute becomes the region's name in the `template_content` array:
 
-Use the [`/messages/send-template`](/api-reference/messages/send-template) endpoint and reference a template by its slug:
-
-```json
-{
-  "key": "YOUR_API_KEY",
-  "template_name": "order-confirmation",
-  "template_content": [],
-  "message": {
-    "from_email": "orders@example.com",
-    "subject": "Your order is confirmed",
-    "to": [{ "email": "jordan@example.com", "type": "to" }],
-    "merge_vars": [
-      {
-        "rcpt": "jordan@example.com",
-        "vars": [
-          { "name": "ORDER_ID", "content": "1043" },
-          { "name": "TOTAL", "content": "$48.00" }
-        ]
-      }
-    ]
-  }
-}
-```
+    ```html
+    <div mc:edit="main">
+      <p>Default content goes here.</p>
+    </div>
+    ```
+  </Step>
+  <Step title="Save and publish">
+    Click **Save Draft** to keep working, or **Publish** to make the template available for sending. Only published templates can be referenced by the API.
+  </Step>
+</Steps>
 
 ## Merge variables
 
-Reference variables in your template with merge tags like `*|ORDER_ID|*`. At send time, each recipient's `vars` replace the tags. Use `global_merge_vars` for values shared across all recipients and `merge_vars` for per-recipient values.
+Merge variables let you inject recipient-specific or message-wide data into your template at send time. Mailchimp Transactional supports two scopes: global and per-recipient.
 
-<Note>
-  Set `merge_language` to `handlebars` if you prefer Handlebars syntax over the default Mailchimp merge tags.
-</Note>
+**Global merge variables** apply the same value to every recipient in the send:
+
+```json
+"global_merge_vars": [
+  { "name": "COMPANY", "content": "Acme Corp" }
+]
+```
+
+**Per-recipient merge variables** override global values for a specific address. Nest them under the recipient's email address in the `merge_vars` array:
+
+```json
+"merge_vars": [
+  {
+    "rcpt": "jordan@example.com",
+    "vars": [
+      { "name": "FNAME", "content": "Jordan" },
+      { "name": "ORDER_ID", "content": "#1043" }
+    ]
+  }
+]
+```
+
+When the same variable name exists at both scopes, the per-recipient value takes precedence.
+
+<Tip>
+  Always provide a sensible fallback in your template HTML for merge vars that might be missing — for example, default `*|FNAME|*` to `Customer` so that a missing value doesn't leave a blank gap in your message.
+</Tip>
+
+## Sending with a template
+
+Call `/messages/send-template` instead of `/messages/send`. Pass the template's slug as `template_name` and supply any editable-region content in `template_content`:
+
+```bash
+curl -X POST https://mandrillapp.com/api/1.0/messages/send-template \
+  -H "Content-Type: application/json" \
+  -d '{
+    "key": "YOUR_API_KEY",
+    "template_name": "order-confirmation",
+    "template_content": [
+      { "name": "main", "content": "<h1>Thanks for your order!</h1>" }
+    ],
+    "message": {
+      "from_email": "orders@yourdomain.com",
+      "from_name": "Your Store",
+      "subject": "Your order is confirmed",
+      "to": [
+        { "email": "jordan@example.com", "name": "Jordan Lee", "type": "to" }
+      ],
+      "global_merge_vars": [
+        { "name": "COMPANY", "content": "Your Store" }
+      ],
+      "merge_vars": [
+        {
+          "rcpt": "jordan@example.com",
+          "vars": [
+            { "name": "FNAME", "content": "Jordan" },
+            { "name": "ORDER_ID", "content": "#1043" }
+          ]
+        }
+      ]
+    }
+  }'
+```
+
+## Required fields
+
+The following fields are required for every `/messages/send-template` request:
+
+| Field | Description |
+|---|---|
+| `key` | Your Mailchimp Transactional API key. |
+| `template_name` | The slug of the published template to send. |
+| `message.from_email` | The sender's email address on a verified domain. |
+| `message.to` | An array containing at least one recipient object. |
+
+You must include `template_content` in your request body, but it can be an empty array if your template contains no `mc:edit` editable regions:
+
+```json
+"template_content": []
+```
+
+## Template versioning
+
+Every time you publish a template, Mailchimp Transactional saves a new version. You can view the full version history and roll back to any previous version from the template's detail page in the dashboard.
+
+The API always sends the **most recently published version** of the template. If you want to test changes without affecting live sends, save your edits as a draft and publish only when you're ready to deploy.

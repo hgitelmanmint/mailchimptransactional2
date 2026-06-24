@@ -1,15 +1,14 @@
 ---
-title: "Mailchimp Transactional"
-description: "Send transactional email at scale with the API trusted to deliver password resets, receipts, and shipping updates in seconds."
+title: "Mailchimp Transactional: Triggered Email & SMS API"
+sidebarTitle: "Introduction"
+description: "Learn how to integrate Mailchimp Transactional to send, track, and manage triggered emails and SMS messages through a developer-friendly REST API."
 ---
 
+Mailchimp Transactional gives you a powerful, scalable API for sending one-to-one triggered emails and SMS messages — think password resets, order confirmations, shipping notifications, and other time-sensitive communications. This page introduces the platform, explains how it fits into your application, and points you to everything you need to get started quickly.
+
 <Note>
-  Mailchimp Transactional was formerly known as **Mandrill**. You may see references to both names while the migration completes.
+  Mailchimp Transactional was formerly known as Mandrill. You may see references to both names in the dashboard and API responses.
 </Note>
-
-## Send email your users actually need
-
-Mailchimp Transactional is a delivery API for the one-to-one, triggered emails your application sends every day: password resets, order confirmations, shipping notifications, and receipts. Unlike marketing email, recipients don't subscribe to a list. Your application sends a message the moment an event happens, and we deliver it in seconds.
 
 <CardGroup cols={2}>
   <Card title="Quickstart" icon="rocket" href="/quickstart">
@@ -18,8 +17,8 @@ Mailchimp Transactional is a delivery API for the one-to-one, triggered emails y
   <Card title="Authentication" icon="key" href="/authentication">
     Generate an API key and authenticate your requests.
   </Card>
-  <Card title="Send email" icon="paper-plane" href="/guides/sending-email">
-    Compose and send messages with full HTML, tracking, and tagging.
+  <Card title="Sending Email" icon="paper-plane" href="/guides/sending-email">
+    Compose and deliver messages with tracking and tagging.
   </Card>
   <Card title="API Reference" icon="code" href="/api-reference/messages/send">
     Explore every endpoint with an interactive playground.
@@ -29,27 +28,29 @@ Mailchimp Transactional is a delivery API for the one-to-one, triggered emails y
 ## Why developers choose Transactional
 
 <CardGroup cols={3}>
-  <Card title="Fast delivery" icon="bolt">
+  <Card title="Fast Delivery" icon="bolt">
     Time-sensitive messages reach the inbox in seconds, not minutes.
   </Card>
   <Card title="Deliverability" icon="shield-check">
-    Dedicated infrastructure and reputation management keep you out of spam.
+    Dedicated infrastructure and reputation management keep your mail out of spam.
   </Card>
-  <Card title="Full visibility" icon="chart-line">
-    Track opens, clicks, and bounces per message, or push events to your own systems with webhooks.
+  <Card title="Full Visibility" icon="chart-line">
+    Track opens, clicks, and bounces per message, or stream events to your systems with webhooks.
   </Card>
 </CardGroup>
 
 ## How it works
 
-Your application's database is the source of truth for your users. Transactional doesn't store contact lists. When an event happens, you pass the recipient and content in a single API request, and we handle delivery, tracking, and reporting.
+<Steps>
+  <Step title="Get an API key">
+    Log in to [mandrillapp.com](https://mandrillapp.com), open **Settings**, and click **New API Key**. Copy the key — you'll include it in every request you make to the API.
+  </Step>
+  <Step title="Send a message">
+    Call `POST /messages/send` with your API key and a message object that includes your recipients, subject, and content. The API returns a status for each recipient immediately.
+  </Step>
+  <Step title="Track delivery">
+    Check the status of any message by querying the API, or configure webhooks to receive real-time events — opens, clicks, bounces, and more — delivered directly to your server.
+  </Step>
+</Steps>
 
-```mermaid
-flowchart LR
-    A[User action] --> B[Your application]
-    B -->|POST /messages/send| C[Mailchimp Transactional]
-    C --> D[Recipient inbox]
-    C -->|webhook events| B
-```
-
-Ready to send? Start with the [Quickstart](/quickstart).
+Ready to send your first message? Head over to the [Quickstart](/quickstart) for a step-by-step walkthrough that takes you from zero to a delivered email in under five minutes.

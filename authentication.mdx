@@ -1,41 +1,74 @@
 ---
-title: "Authentication"
-description: "Generate an API key and authenticate every request."
+title: "Authenticate Requests to the Transactional API"
+sidebarTitle: "Authentication"
+description: "Every Mailchimp Transactional request requires an API key in the request body. Learn how to generate, scope, use, and rotate your keys securely."
 ---
 
-Every request to the Mailchimp Transactional API is authenticated with an API key. There are no OAuth flows or request signing — you pass your key with each call.
+Every request to the Mailchimp Transactional API must include a valid API key passed as the `key` field in the JSON request body. There is no OAuth flow and no session-based login — authentication is stateless and per-request. Keep your keys secret and out of client-side code.
 
 ## Generating a key
 
-1. Log in to your [Mandrill account](https://mandrillapp.com/).
-2. Open **Settings** from the left navigation.
-3. Select **+ New API Key**.
-4. Give the key a label and choose its permissions, then copy the generated value.
+You can create as many API keys as you need from the Mailchimp Transactional dashboard.
+
+1. Log in to your account at [https://mandrillapp.com/](https://mandrillapp.com/).
+2. Open **Settings** in the left nav.
+3. Click **+ New API Key**.
+4. Give the key a descriptive label, set its permissions, then copy the generated value.
 
 <Tip>
-  Create separate keys for each environment and service. Scoping keys narrowly limits the blast radius if one is ever leaked, and the per-key analytics make it easy to see which system sent what.
+  Create a separate key for each environment (development, staging, production) and each service that sends email. Narrow scoping limits damage if a key leaks and makes per-service analytics easy to read.
 </Tip>
 
 ## Using your key
 
-Include your key in the body of every request as the `key` parameter:
+Include your API key as the `key` field at the top level of the JSON body in every request:
 
 ```json
 {
   "key": "md-xxxxxxxxxxxxxxxxxxxxxx",
-  "message": { }
+  "message": { ... }
 }
 ```
 
-## Required permissions
+The key goes in the **request body**, not in an `Authorization` header. Requests that include the key only as a header will fail authentication.
 
-Different endpoints require different permissions. Two of the most common:
+## Permissions
 
-| Action | Permission |
-| --- | --- |
-| Send a raw message | `Messages > Send` |
-| Send using a template | `Templates > List`, `Messages > Send-Template` |
+API keys can be scoped to specific actions so that a compromised key can only affect a limited surface area. Set permissions when you create a key, or edit them later from the **Settings** page. The table below maps common operations to the permissions they require.
+
+| Action | Required permission |
+|---|---|
+| Send a raw message | Messages > Send |
+| Send using a template | Templates > List, Messages > Send-Template |
+| Manage webhooks | Webhooks > List, Webhooks > Add |
+| View message info | Messages > Info |
 
 ## Rotating keys
 
-If a key is compromised, generate a replacement first, deploy it, then delete the old key. Because keys are passed per request, rotation requires no downtime.
+If a key is compromised — or if you simply want to rotate credentials as part of routine security hygiene — follow this order to avoid downtime:
+
+1. Generate a replacement key in the dashboard and copy its value.
+2. Deploy the new key to all services and environments that rely on it.
+3. Confirm that your services are sending successfully with the new key.
+4. Delete the old key from the dashboard.
+
+Because authentication is per-request, there is no session to invalidate and no gap in delivery between the old key and the new one.
+
+<Warning>
+  Deleting a key is permanent. Make sure your replacement is deployed and working before removing the old one.
+</Warning>
+
+## Error responses
+
+If your key is missing, malformed, or has been deleted, the API returns an error body instead of processing the request:
+
+```json
+{
+  "status": "error",
+  "code": -1,
+  "name": "Invalid_Key",
+  "message": "Invalid API key"
+}
+```
+
+Check that you are passing the key in the request body (not a header), that there are no extra spaces or line breaks in the value, and that the key has not been deleted from your account.

@@ -1,20 +1,41 @@
 ---
-title: "Quickstart"
-description: "Send your first transactional email in under five minutes."
+title: "Get Started with Mailchimp Transactional"
+sidebarTitle: "Quickstart"
+description: "Send your first transactional email in minutes. This guide walks you through getting an API key, verifying your domain, and making your first API call."
 ---
 
-This guide walks you through sending your first message. By the end you'll have a working API call you can drop into your application.
+Mailchimp Transactional is a delivery API built for triggered, one-to-one email — order confirmations, password resets, shipping notifications, and more. This page covers everything you need to go from a blank slate to a successfully delivered message: generating an API key, authenticating your sending domain, firing off a test email, and interpreting the response.
 
 <Steps>
+
   <Step title="Get your API key">
-    Log in to your [Mandrill account](https://mandrillapp.com/), open **Settings**, and select **+ New API Key**. Copy the key somewhere safe — you'll need it for every request.
+    Every request to the Mailchimp Transactional API must include a valid API key. To generate one:
+
+    1. Log in to your account at [https://mandrillapp.com/](https://mandrillapp.com/).
+    2. Open **Settings** from the left navigation.
+    3. Click **+ New API Key**.
+    4. Give the key a descriptive label, then copy the generated value and store it somewhere safe.
 
     <Warning>
       Treat your API key like a password. Never commit it to source control or expose it in client-side code.
     </Warning>
   </Step>
+
+  <Step title="Authenticate your domain">
+    You must add and verify a sending domain before Mailchimp Transactional can deliver email on your behalf. Without a verified domain, messages will be rejected.
+
+    1. Navigate to **Sending Domains** in the dashboard.
+    2. Click **Add Domain** and enter the domain you plan to send from.
+    3. Follow the DNS setup instructions — at minimum, you must publish the **DKIM record** provided in the dashboard.
+    4. Once your DNS changes propagate, click **Test DNS Settings** to confirm verification.
+
+    <Tip>
+      Use a subdomain like `mail.yourdomain.com` to keep transactional and marketing email reputation separate.
+    </Tip>
+  </Step>
+
   <Step title="Send a test message">
-    Make a request to the `/messages/send` endpoint with your key and a message object:
+    With a key in hand and a verified domain, you're ready to send. Make a `POST` request to the `/messages/send` endpoint:
 
     ```bash
     curl -X POST https://mandrillapp.com/api/1.0/messages/send \
@@ -22,10 +43,10 @@ This guide walks you through sending your first message. By the end you'll have 
       -d '{
         "key": "YOUR_API_KEY",
         "message": {
-          "from_email": "orders@example.com",
-          "from_name": "Example Store",
+          "from_email": "orders@yourdomain.com",
+          "from_name": "Your Company",
           "subject": "Your order has shipped",
-          "html": "<p>Hi Jordan, your order #1043 has shipped.</p>",
+          "html": "<p>Hi Jordan, your order #1043 has shipped and is on the way.</p>",
           "to": [
             { "email": "jordan@example.com", "name": "Jordan Lee", "type": "to" }
           ],
@@ -34,9 +55,12 @@ This guide walks you through sending your first message. By the end you'll have 
         }
       }'
     ```
+
+    Replace `YOUR_API_KEY` with the key you copied in Step 1, and replace `orders@yourdomain.com` with an address on your verified domain.
   </Step>
+
   <Step title="Check the response">
-    A successful send returns an array with one entry per recipient:
+    A successful call returns a JSON array with one object per recipient:
 
     ```json
     [
@@ -49,20 +73,20 @@ This guide walks you through sending your first message. By the end you'll have 
     ]
     ```
 
-    A `status` of `sent` or `queued` means delivery is underway. Save the `_id` if you want to look the message up later with [`/messages/info`](/api-reference/messages/info).
+    - A `status` of `sent` or `queued` means delivery is underway.
+    - A `status` of `rejected` or `invalid` means the message was not sent — check the `reject_reason` field for details on why it was blocked.
+    - Save the `_id` value to look up delivery status, open events, and click events for that message later.
   </Step>
-  <Step title="Confirm delivery">
-    Open the recipient inbox, or call `/messages/info` with the returned `_id` to see opens and clicks as they happen.
-  </Step>
+
 </Steps>
 
 ## Next steps
 
 <CardGroup cols={2}>
-  <Card title="Use templates" icon="layer-group" href="/guides/templates">
+  <Card title="Use Templates" icon="layer-group" href="/guides/templates">
     Stop hardcoding HTML. Manage reusable templates with merge variables.
   </Card>
-  <Card title="Track events" icon="webhook" href="/guides/webhooks">
-    Push delivery, open, and click events to your own systems.
+  <Card title="Track Events" icon="webhook" href="/guides/webhooks">
+    Push delivery, open, and click events to your own systems in real time.
   </Card>
 </CardGroup>

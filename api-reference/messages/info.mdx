@@ -1,4 +1,71 @@
 ---
-title: "Get message info"
-openapi: "POST /messages/info"
+title: "POST /messages/info — Get Message Details"
+sidebarTitle: "Message Info"
+description: "POST /messages/info — retrieve delivery status, open count, click count, and full metadata for a single sent message by ID."
 ---
+
+`POST /messages/info` lets you retrieve detailed delivery information, engagement metrics, and full metadata for any recently sent message using its unique `_id`. Use this endpoint to confirm delivery, diagnose bounces, or surface open and click activity in your application.
+
+`POST https://mandrillapp.com/api/1.0/messages/info`
+
+## Request body
+
+<ParamField body="key" type="string" required>
+  Your API key.
+</ParamField>
+
+<ParamField body="id" type="string" required>
+  The unique message ID returned by `/messages/send` or `/messages/send-template`.
+</ParamField>
+
+## Response
+
+<ResponseField name="_id" type="string">
+  The unique message ID.
+</ResponseField>
+
+<ResponseField name="subject" type="string">
+  The message subject.
+</ResponseField>
+
+<ResponseField name="email" type="string">
+  The recipient email address.
+</ResponseField>
+
+<ResponseField name="state" type="string">
+  Current delivery state: `sent`, `bounced`, `rejected`, `spam`, `unsub`, or `opened`.
+</ResponseField>
+
+<ResponseField name="opens" type="integer">
+  Total number of times the message has been opened.
+</ResponseField>
+
+<ResponseField name="clicks" type="integer">
+  Total number of tracked link clicks.
+</ResponseField>
+
+## Example
+
+```bash
+curl -X POST https://mandrillapp.com/api/1.0/messages/info \
+  -H "Content-Type: application/json" \
+  -d '{
+    "key": "YOUR_API_KEY",
+    "id": "abc123abc123abc123abc123"
+  }'
+```
+
+```json
+{
+  "_id": "abc123abc123abc123abc123",
+  "subject": "Your order has shipped",
+  "email": "jordan@example.com",
+  "state": "opened",
+  "opens": 2,
+  "clicks": 1
+}
+```
+
+<Note>
+  Message info is available for 30 days after sending. After that, use the Activity Export (`/exports/activity`) to retrieve historical data.
+</Note>

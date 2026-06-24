@@ -1,48 +1,122 @@
 ---
-title: "Webhooks"
-description: "Push delivery, open, click, and bounce events to your own systems in real time."
+title: "Stream Email Events to Your App with Webhooks"
+sidebarTitle: "Webhooks"
+description: "Set up Mailchimp Transactional webhooks to receive real-time delivery, open, click, bounce, and spam complaint events posted directly to your endpoint."
 ---
 
-Polling for message status doesn't scale. Webhooks let Mailchimp Transactional push events to your application the moment they happen, so your systems always reflect reality.
+This guide covers setting up webhooks in Mailchimp Transactional to receive real-time event notifications — deliveries, opens, clicks, bounces, and spam complaints — posted to a URL you control. Webhooks let your application react to email activity as it happens, without polling the API.
 
-## How webhooks work
+## Available event types
 
-When you register a webhook URL, we POST batches of events to it as they occur. A single batch can contain up to 1,000 events, delivered as form-encoded data in a `mailchimp_events` field.
+Subscribe to only the events your application needs. Each event type is delivered as a separate object in the webhook payload.
 
-```mermaid
-flowchart LR
-    A[Email opened] --> B[Mailchimp Transactional]
-    B -->|POST batch of events| C[Your webhook URL]
-    C --> D[Update your database]
+| Event | Trigger |
+|---|---|
+| `send` | A message is accepted by the API and handed off for delivery. |
+| `deferral` | Delivery was attempted but temporarily deferred by the receiving server. |
+| `hard_bounce` | The message permanently bounced — the address is invalid. |
+| `soft_bounce` | The message temporarily bounced — the mailbox may be full. |
+| `open` | The recipient opened the message. |
+| `click` | The recipient clicked a tracked link. |
+| `spam` | The recipient marked the message as spam. |
+| `unsub` | The recipient clicked an unsubscribe link. |
+| `reject` | The message was rejected before sending (e.g., on the denylist). |
+
+## Adding a webhook
+
+You can add a webhook from the dashboard or directly via the API.
+
+**From the dashboard:**
+
+<Steps>
+  <Step title="Open the Webhooks page">
+    Log in to [mandrillapp.com](https://mandrillapp.com/), navigate to **Webhooks**, and click **Add Webhook**.
+  </Step>
+  <Step title="Enter your endpoint URL">
+    Enter the URL where Mailchimp Transactional should POST events. Your endpoint must be publicly reachable over HTTPS.
+  </Step>
+  <Step title="Select event types">
+    Check the event types you want to subscribe to. You can update your subscriptions at any time from the webhook's detail page.
+  </Step>
+  <Step title="Create and test the webhook">
+    Click **Create Webhook**. Verify the setup by sending a test message or triggering an event type via the API and confirming your endpoint receives the payload.
+  </Step>
+</Steps>
+
+**Via the API:**
+
+```bash
+curl -X POST https://mandrillapp.com/api/1.0/webhooks/add \
+  -H "Content-Type: application/json" \
+  -d '{
+    "key": "YOUR_API_KEY",
+    "url": "https://yourapp.com/webhooks/mailchimp",
+    "events": ["send", "open", "click", "hard_bounce"]
+  }'
 ```
 
-## Registering a webhook
+## Webhook payload format
 
-Use [`/webhooks/add`](/api-reference/webhooks/add) with the URL to receive events and the event types you care about:
+Mailchimp Transactional delivers events as a JSON array in a POST body parameter named `mandrill_events`. Each element in the array represents one event.
 
 ```json
-{
-  "key": "YOUR_API_KEY",
-  "url": "https://example.com/webhooks/mailchimp",
-  "events": ["send", "open", "click", "hard_bounce", "soft_bounce"]
-}
+[
+  {
+    "event": "open",
+    "ts": 1704067200,
+    "_id": "abc123abc123abc123abc123",
+    "msg": {
+      "email": "jordan@example.com",
+      "subject": "Your order has shipped",
+      "tags": ["order-shipped"]
+    },
+    "ip": "203.0.113.42",
+    "user_agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X)"
+  }
+]
 ```
 
-## Event types
+Key fields in every event:
 
-| Event | Fires when |
-| --- | --- |
-| `send` | A message is handed off for delivery. |
-| `open` | A recipient opens a tracked message. |
-| `click` | A recipient clicks a tracked link. |
-| `hard_bounce` | Delivery permanently fails. |
-| `soft_bounce` | Delivery temporarily fails. |
-| `spam` | A recipient marks the message as spam. |
+| Field | Description |
+|---|---|
+| `event` | The event type (e.g., `open`, `click`, `hard_bounce`). |
+| `ts` | Unix timestamp of when the event occurred. |
+| `_id` | The unique message ID, matching the `_id` returned by the send API. |
+| `msg` | An object containing message metadata: recipient email, subject, tags, and more. |
 
-## Verifying authenticity
+## Responding to webhooks
 
-We send a `HEAD` request to confirm your endpoint before activating a webhook, then sign each batch. Validate the signature against your webhook key before trusting incoming data.
+Your endpoint must return an HTTP `200` status code within **10 seconds** of receiving the request. Mailchimp Transactional interprets any non-200 response — or no response within the timeout — as a failed delivery and will retry.
 
 <Warning>
-  Always respond to webhook requests with a `2xx` status quickly. Slow responses can cause retries and duplicate processing.
+  If your endpoint is slow or consistently returns non-200 responses, Mailchimp Transactional will retry delivery with exponential backoff and may eventually disable the webhook entirely. Make sure your handler is fast and returns `200` before performing any heavy processing — use a queue to handle work asynchronously.
 </Warning>
+
+## Verifying webhook authenticity
+
+Mailchimp Transactional signs each POST request with an HMAC-SHA1 signature so you can confirm the request genuinely originated from Mailchimp. The signature is included in the `X-Mandrill-Signature` HTTP header.
+
+To verify a request:
+
+1. Retrieve your webhook's authentication key from its detail page in the dashboard.
+2. Concatenate the full POST body as a string.
+3. Compute an HMAC-SHA1 digest of that string using your authentication key as the secret.
+4. Base64-encode the result and compare it to the value in the `X-Mandrill-Signature` header.
+5. Reject the request if the values don't match.
+
+<Tip>
+  Your webhook authentication key is displayed on the webhook's detail page in the dashboard. Treat it as a secret — rotate it if you believe it has been compromised.
+</Tip>
+
+## Listing your webhooks
+
+To retrieve all webhooks currently configured on your account:
+
+```bash
+curl -X POST https://mandrillapp.com/api/1.0/webhooks/list \
+  -H "Content-Type: application/json" \
+  -d '{"key": "YOUR_API_KEY"}'
+```
+
+The response is an array of webhook objects, each containing the webhook's `id`, `url`, subscribed `events`, and `auth_key`.

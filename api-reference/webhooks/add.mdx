@@ -1,4 +1,72 @@
 ---
-title: "Add a webhook"
-openapi: "POST /webhooks/add"
+title: "POST /webhooks/add — Register a New Webhook"
+sidebarTitle: "Add Webhook"
+description: "POST /webhooks/add — register a new webhook URL on your account and choose which event types trigger it."
 ---
+
+`POST /webhooks/add` registers a new endpoint to receive Mailchimp Transactional event notifications — you provide the URL and the event types you want to subscribe to. Once registered, Mailchimp Transactional will POST batched event payloads to your URL as matching events occur.
+
+## Endpoint
+
+```
+POST https://mandrillapp.com/api/1.0/webhooks/add
+```
+
+## Request body
+
+<ParamField body="key" type="string" required>
+  Your API key.
+</ParamField>
+
+<ParamField body="url" type="string" required>
+  The URL to POST event batches to. Must be publicly reachable and return HTTP 200 within 10 seconds.
+</ParamField>
+
+<ParamField body="events" type="array">
+  The event types to subscribe to. Omit to subscribe to all events. Available values: `send`, `deferral`, `hard_bounce`, `soft_bounce`, `open`, `click`, `spam`, `unsub`, `reject`.
+</ParamField>
+
+## Response
+
+The response is the newly created webhook object.
+
+<ResponseField name="id" type="integer">
+  The unique ID of the new webhook.
+</ResponseField>
+
+<ResponseField name="url" type="string">
+  The registered URL.
+</ResponseField>
+
+<ResponseField name="events" type="array">
+  The event types the webhook is subscribed to.
+</ResponseField>
+
+<ResponseField name="created_at" type="string">
+  UTC timestamp of creation.
+</ResponseField>
+
+## Example
+
+```bash
+curl -X POST https://mandrillapp.com/api/1.0/webhooks/add \
+  -H "Content-Type: application/json" \
+  -d '{
+    "key": "YOUR_API_KEY",
+    "url": "https://yourapp.com/webhooks/mailchimp",
+    "events": ["send", "open", "click", "hard_bounce"]
+  }'
+```
+
+```json
+{
+  "id": 42,
+  "url": "https://yourapp.com/webhooks/mailchimp",
+  "events": ["send", "open", "click", "hard_bounce"],
+  "created_at": "2025-01-15 12:00:00"
+}
+```
+
+<Tip>
+  After adding a webhook, send a test message via the API to verify your endpoint is receiving events correctly.
+</Tip>

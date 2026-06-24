@@ -1,35 +1,101 @@
 ---
-title: "Migrating from 1.0"
-description: "Move from the legacy 1.0 API to the current version with confidence."
+title: "Migrate from Mailchimp Transactional API v1.0 to v1.3"
+sidebarTitle: "Migration Guide"
+description: "Understand what changed between API v1.0 and v1.3 and follow the step-by-step checklist to update your integration safely and without downtime."
 ---
 
-If you're on the original 1.0 API, this guide covers what changed and how to upgrade safely. Most integrations migrate in an afternoon.
+This guide covers the breaking changes introduced between Mailchimp Transactional API v1.0 and v1.3, explains why upgrading matters, and walks you through updating your integration. Each change is documented with before-and-after examples so you can migrate confidently.
 
-<Info>
-  Version 1.0 remains supported. You can migrate one endpoint at a time — there's no need for a single cutover.
-</Info>
+## What changed in v1.3
 
-## What changed
+v1.3 introduces several improvements to consistency, scheduling, and observability. Here's a summary of what's new:
+
+- **`template_content` is now an array of objects.** Previously, `template_content` accepted a plain HTML string. In v1.3, it is an array of objects, each with a `name` key identifying the editable region and a `content` key containing the HTML to inject. This aligns the field with how `mc:edit` regions work in the template editor.
+
+- **`send_at` scheduling on the `message` object.** You can now pass a `send_at` timestamp directly on the `message` object to schedule a send for a future UTC time, up to one year out.
+
+- **`_id` promoted to the top-level webhook event object.** In v1.0, the message ID was only available nested inside `msg._id`. In v1.3, `_id` is also present at the top level of each event object, making it easier to correlate events with send responses without parsing nested fields.
+
+- **New `reject_reason` values.** Two new values are now returned in send responses:
+  - `"rule"` — the message was blocked by the Rules Engine.
+  - `"soft-bounce"` — the recipient address was suppressed after a previous soft bounce.
+
+- **Metadata in message info responses.** Fields submitted as `metadata` on a message are now returned when you fetch message details via `/messages/info`.
+
+## Breaking changes checklist
+
+Work through each step to bring your integration up to v1.3.
 
 <Steps>
-  <Step title="Structured send results">
-    Responses now return a consistent per-recipient result object with a stable `_id`. Code that parsed the older flat response should read the new array.
+  <Step title="Update template_content from a string to an array">
+    If your integration calls `/messages/send-template`, update the `template_content` field from a plain HTML string to an array of named region objects.
+
+    ```json Before (v1.0)
+    {
+      "template_content": "<h1>Thanks for your order</h1>"
+    }
+    ```
+
+    ```json After (v1.3)
+    {
+      "template_content": [
+        { "name": "main", "content": "<h1>Thanks for your order</h1>" }
+      ]
+    }
+    ```
+
+    If your template has no `mc:edit` editable regions, pass an empty array: `"template_content": []`.
   </Step>
-  <Step title="Expanded webhook events">
-    Newer event types like `soft_bounce` and `spam` are available. Existing event subscriptions continue to work unchanged.
+  <Step title="Update webhook handlers to read _id from the top level">
+    In v1.0, your handlers may read the message ID as `event.msg._id`. In v1.3, `_id` is available at `event._id` as well. Update your handlers to read from the top level so your code is future-proof and you avoid an extra object traversal:
+
+    ```js
+    // Before (v1.0)
+    const messageId = event.msg._id;
+
+    // After (v1.3)
+    const messageId = event._id;
+    ```
   </Step>
-  <Step title="Template content arrays">
-    Template sends accept a structured `template_content` array for editable regions, replacing the older inline approach.
+  <Step title="Handle the new reject_reason values">
+    Update any code that switches or conditionally branches on `reject_reason` to handle the two new values:
+
+    - `"rule"` — Log or alert so you can review which Rules Engine rule triggered the block.
+    - `"soft-bounce"` — Treat this address as temporarily suppressed. Do not immediately remove it from your list; wait to see whether the suppression clears.
+  </Step>
+  <Step title="Read metadata from /messages/info responses">
+    If your integration submits `metadata` on outbound messages and then retrieves message details, update your parsing logic to read the `metadata` field from `/messages/info` response objects. In v1.0 this field was absent from the response; in v1.3 it is returned alongside the rest of the message record.
   </Step>
 </Steps>
 
-## Recommended upgrade path
+## Rolling migration strategy
 
-1. Point a single non-critical message type at the new version.
-2. Confirm send results and webhook events parse correctly in your systems.
-3. Roll the remaining message types over one at a time.
-4. Once all traffic is migrated, update your monitoring to the new response shape.
+Follow this sequence to migrate a production integration with minimal risk.
 
-## Need a hand?
+<Steps>
+  <Step title="Test against v1.3 in staging">
+    Point a staging environment at the v1.3 schema and run your full test suite. Pay particular attention to template sends, webhook event handlers, and any code that inspects `reject_reason`.
+  </Step>
+  <Step title="Deploy the updated client to production">
+    Ship the updated request payloads and response-handling logic to production. Because the API base URL is unchanged, no DNS or routing changes are required.
+  </Step>
+  <Step title="Monitor for 24 hours">
+    Watch your dashboard for unexpected rejections, bounce spikes, or webhook delivery failures. Check your application logs for unhandled `reject_reason` values or JSON parse errors related to `template_content`.
+  </Step>
+  <Step title="Remove v1.0-specific workarounds">
+    Once you're confident the migration is stable, clean up any compatibility shims, string-to-array conversion helpers, or nested `msg._id` lookups you added during the transition.
+  </Step>
+</Steps>
 
-Check the [Changelog](/changelog) for the full list of changes between versions, or reach out through [developer support](https://mailchimp.com/developer/support/).
+## Backward-compatible changes
+
+The following features were added in v1.3 but are purely additive — your existing code will continue to work without modification if you don't use them. Adopt them at your own pace:
+
+- **`important` flag** — Mark a message as high-priority to jump ahead of queued bulk sends.
+- **`send_at` scheduling** — Schedule individual messages for future delivery without any external job queue.
+- **`tags` filtering in activity exports** — Filter your exported activity data by tag directly from the dashboard.
+- **Dedicated IP pool management endpoints** — Programmatically create, update, and delete dedicated IP pools and assign IPs to them.
+
+<Note>
+  The API base URL remains `https://mandrillapp.com/api/1.0` for both versions. The version number in the path is fixed; versioning is handled by the request and response schema, not the URL.
+</Note>

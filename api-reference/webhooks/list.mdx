@@ -1,4 +1,58 @@
 ---
-title: "List webhooks"
-openapi: "POST /webhooks/list"
+title: "POST /webhooks/list — List Account Webhooks"
+sidebarTitle: "List Webhooks"
+description: "POST /webhooks/list — retrieve all webhook configurations for your account, including URLs, subscribed event types, and creation timestamps."
 ---
+
+`POST /webhooks/list` returns all webhook endpoints configured on your Mailchimp Transactional account, including the URL each endpoint is registered to, the event types it subscribes to, and the UTC timestamp of when it was created.
+
+## Endpoint
+
+```
+POST https://mandrillapp.com/api/1.0/webhooks/list
+```
+
+## Request body
+
+<ParamField body="key" type="string" required>
+  Your API key.
+</ParamField>
+
+## Response
+
+The response is an array of webhook objects, one for each webhook configured on your account. If no webhooks have been added, the array is empty.
+
+<ResponseField name="id" type="integer">
+  The unique identifier for the webhook.
+</ResponseField>
+
+<ResponseField name="url" type="string">
+  The URL where event batches are POSTed.
+</ResponseField>
+
+<ResponseField name="events" type="array">
+  The list of event types this webhook is subscribed to (e.g. `send`, `open`, `click`, `hard_bounce`).
+</ResponseField>
+
+<ResponseField name="created_at" type="string">
+  UTC timestamp of when the webhook was created, in `YYYY-MM-DD HH:MM:SS` format.
+</ResponseField>
+
+## Example
+
+```bash
+curl -X POST https://mandrillapp.com/api/1.0/webhooks/list \
+  -H "Content-Type: application/json" \
+  -d '{"key": "YOUR_API_KEY"}'
+```
+
+```json
+[
+  {
+    "id": 42,
+    "url": "https://yourapp.com/webhooks/mailchimp",
+    "events": ["send", "open", "click", "hard_bounce"],
+    "created_at": "2025-01-15 12:00:00"
+  }
+]
+```

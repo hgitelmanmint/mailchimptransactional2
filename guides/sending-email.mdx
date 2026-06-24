@@ -1,74 +1,143 @@
 ---
-title: "Sending email"
-description: "Compose and send messages with HTML content, recipients, tracking, and tags."
+title: "Sending Transactional Email with Mailchimp"
+sidebarTitle: "Sending Email"
+description: "Learn how to compose and send transactional messages using the message object — covering HTML/text content, recipients, tracking, and scheduling."
 ---
 
-The `/messages/send` endpoint is the core of the API. This guide covers the message object in detail so you can send exactly what your users need.
+This guide covers the Mailchimp Transactional message object in depth. You'll learn how to compose HTML and plain-text content, address single or multiple recipients, enable open and click tracking, and schedule messages for future delivery.
 
 ## The message object
 
-Every send is built around a `message` object. At minimum it needs a sender, a subject, content, and at least one recipient.
+The `message` object is the core of every send request. You include it in the request body of any `/messages/send` call, and every field you set on it controls how the message is composed, addressed, and delivered.
 
-```json
-{
-  "from_email": "orders@example.com",
-  "from_name": "Example Store",
-  "subject": "Your order has shipped",
-  "html": "<p>Hi Jordan, your order #1043 has shipped.</p>",
-  "to": [
-    { "email": "jordan@example.com", "name": "Jordan Lee", "type": "to" }
-  ]
-}
+<ParamField body="html" type="string">
+  The full HTML content of the message. At least one of `html` or `text` is required.
+</ParamField>
+
+<ParamField body="text" type="string">
+  The plain-text version of the message. Recommended for accessibility and spam filter compliance.
+</ParamField>
+
+<ParamField body="subject" type="string" required>
+  The message subject line.
+</ParamField>
+
+<ParamField body="from_email" type="string" required>
+  The sender's email address. Must be on a verified sending domain.
+</ParamField>
+
+<ParamField body="from_name" type="string">
+  The display name shown as the sender in the recipient's inbox.
+</ParamField>
+
+<ParamField body="to" type="array" required>
+  An array of recipient objects. Each object has `email` (string, required), `name` (string), and `type` ("to", "cc", or "bcc").
+</ParamField>
+
+<ParamField body="track_opens" type="boolean">
+  Set to `true` to track when recipients open the message. Default: `false`.
+</ParamField>
+
+<ParamField body="track_clicks" type="boolean">
+  Set to `true` to track link clicks in the message. Default: `false`.
+</ParamField>
+
+<ParamField body="tags" type="array">
+  An array of strings to tag the message. Tags appear in your activity reports and can be used to filter exports.
+</ParamField>
+
+<ParamField body="important" type="boolean">
+  Mark the message as high-priority. Important messages jump ahead of backlogged bulk sends. Default: `false`.
+</ParamField>
+
+<ParamField body="send_at" type="string">
+  UTC timestamp in `YYYY-MM-DD HH:MM:SS` format. Schedule the message for future delivery up to one year out.
+</ParamField>
+
+## Sending a message
+
+Pass your API key and a fully composed `message` object to `/messages/send`:
+
+```bash
+curl -X POST https://mandrillapp.com/api/1.0/messages/send \
+  -H "Content-Type: application/json" \
+  -d '{
+    "key": "YOUR_API_KEY",
+    "message": {
+      "html": "<p>Hi Jordan, your order #1043 has shipped!</p>",
+      "text": "Hi Jordan, your order #1043 has shipped!",
+      "subject": "Your order has shipped",
+      "from_email": "orders@yourdomain.com",
+      "from_name": "Your Store",
+      "to": [
+        { "email": "jordan@example.com", "name": "Jordan Lee", "type": "to" }
+      ],
+      "track_opens": true,
+      "track_clicks": true,
+      "tags": ["order-shipped"]
+    }
+  }'
 ```
 
-## Multiple recipients
-
-The `to` array accepts as many recipients as you need, each with a `type` of `to`, `cc`, or `bcc`. Each recipient receives an individual message — recipients never see each other.
-
-```json
-"to": [
-  { "email": "jordan@example.com", "type": "to" },
-  { "email": "records@example.com", "type": "bcc" }
-]
-```
-
-## Tracking opens and clicks
-
-Set `track_opens` and `track_clicks` to monitor engagement. Tracking data appears per message and can be retrieved with [`/messages/info`](/api-reference/messages/info) or pushed to your systems with [webhooks](/guides/webhooks).
-
-```json
-{
-  "track_opens": true,
-  "track_clicks": true
-}
-```
-
-## Tagging messages
-
-Tags let you group and report on messages by type. Tag your password resets separately from your receipts, and you can analyze deliverability for each stream independently.
-
-```json
-{
-  "tags": ["password-reset"]
-}
-```
-
-## Handling the response
-
-A send returns an array with one result per recipient. Always check `status` per recipient rather than assuming a single outcome:
+A successful response is an array with one entry per recipient:
 
 ```json
 [
-  { "email": "jordan@example.com", "status": "sent", "_id": "abc123" },
-  { "email": "invalid@", "status": "invalid", "reject_reason": "invalid-address" }
+  {
+    "email": "jordan@example.com",
+    "status": "sent",
+    "_id": "abc123abc123abc123abc123",
+    "reject_reason": null
+  }
 ]
 ```
 
-| Status | Meaning |
-| --- | --- |
-| `sent` | Delivered to the receiving server. |
-| `queued` | Accepted and waiting to send. |
-| `rejected` | Blocked — see `reject_reason`. |
-| `invalid` | The address could not be parsed. |
+## Message status values
 
-Try it live in the [API Reference](/api-reference/messages/send).
+Each recipient entry in the response contains a `status` field. Use it to confirm delivery or diagnose problems.
+
+| Status | Meaning |
+|---|---|
+| `sent` | Accepted and handed off to the receiving mail server. |
+| `queued` | Queued for delivery (e.g., attachment processing, >10 recipients). |
+| `scheduled` | Stored and will be sent at the specified `send_at` time. |
+| `rejected` | Not sent. Check `reject_reason` for the cause. |
+| `invalid` | The recipient address is malformed. |
+
+## Scheduling messages
+
+Set `send_at` to a UTC timestamp to schedule a message for future delivery. You can schedule up to one year in the future:
+
+```json
+{
+  "send_at": "2025-12-25 09:00:00"
+}
+```
+
+Scheduled messages count toward your monthly sending totals when they are actually sent, not when you schedule them. To modify or cancel a scheduled send, use the `messages/reschedule` or `messages/cancel-scheduled` endpoints respectively.
+
+## Multiple recipients
+
+You can include multiple objects in the `to` array to send to several recipients in one request. Via SMTP, you can address up to 1,000 recipients per message. Via the API, the total JSON payload must stay under 10 MB.
+
+Set `preserve_recipients` to `false` to keep each recipient's address hidden from the others — recipients will only see their own address in the `To` header.
+
+<Tip>
+  Keep API batches small (under 100 recipients) for easier troubleshooting. Smaller batches make it straightforward to identify which recipient or address caused a rejection.
+</Tip>
+
+## Tagging messages
+
+Tags let you segment your activity reports and filter data exports in the Mailchimp Transactional dashboard. Attach tags by including a `tags` array on the `message` object:
+
+```json
+{
+  "tags": ["order-shipped", "transactional"]
+}
+```
+
+Keep the following limits in mind:
+
+- Each tag is a plain string, maximum **50 characters**.
+- You can apply a maximum of **5 tags** per message.
+- Tags appear in your dashboard activity view and are available when exporting data.

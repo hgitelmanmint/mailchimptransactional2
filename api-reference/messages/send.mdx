@@ -1,4 +1,111 @@
 ---
-title: "Send a message"
-openapi: "POST /messages/send"
+title: "POST /messages/send — Send a Transactional Message"
+sidebarTitle: "Send Message"
+description: "POST /messages/send — send a new transactional message. Accepts a message object with recipients, HTML content, subject, tracking options."
 ---
+
+`POST /messages/send` is the primary endpoint for sending transactional messages. Pass a message object containing your recipients, HTML content, and delivery options; the API returns a per-recipient status array confirming the outcome for each address.
+
+`POST https://mandrillapp.com/api/1.0/messages/send`
+
+## Request body
+
+<ParamField body="key" type="string" required>
+  Your API key. Pass this in every request.
+</ParamField>
+
+<ParamField body="message" type="object" required>
+  The message object to send.
+  <Expandable title="message fields">
+    <ParamField body="html" type="string">
+      Full HTML content of the message. At least one of `html` or `text` is required.
+    </ParamField>
+    <ParamField body="text" type="string">
+      Plain-text version. Recommended alongside HTML for accessibility and deliverability.
+    </ParamField>
+    <ParamField body="subject" type="string" required>
+      The message subject line.
+    </ParamField>
+    <ParamField body="from_email" type="string" required>
+      Sender email address. Must be on a verified domain.
+    </ParamField>
+    <ParamField body="from_name" type="string">
+      Display name shown as the sender.
+    </ParamField>
+    <ParamField body="to" type="array" required>
+      Array of recipient objects. Each has `email` (required), `name`, and `type` ("to", "cc", or "bcc").
+    </ParamField>
+    <ParamField body="track_opens" type="boolean">
+      Enable open tracking. Default: `false`.
+    </ParamField>
+    <ParamField body="track_clicks" type="boolean">
+      Enable click tracking. Default: `false`.
+    </ParamField>
+    <ParamField body="tags" type="array">
+      String tags to label the message for activity reporting. Max 5 tags, 50 chars each.
+    </ParamField>
+    <ParamField body="important" type="boolean">
+      Prioritize this message over queued bulk sends. Default: `false`.
+    </ParamField>
+    <ParamField body="send_at" type="string">
+      Schedule delivery: UTC timestamp in `YYYY-MM-DD HH:MM:SS` format. Up to one year in the future.
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+<ParamField body="async" type="boolean">
+  Use background sending mode — optimized for bulk sends. With `async: true`, the response returns immediately; message IDs are not guaranteed. Default: `false`.
+</ParamField>
+
+## Response
+
+The response is an array with one entry per recipient.
+
+<ResponseField name="email" type="string">
+  The email address of the recipient.
+</ResponseField>
+
+<ResponseField name="status" type="string">
+  Delivery status: `sent`, `queued`, `scheduled`, `rejected`, or `invalid`.
+</ResponseField>
+
+<ResponseField name="_id" type="string">
+  Unique message ID. Use this to look up delivery details with `/messages/info`.
+</ResponseField>
+
+<ResponseField name="reject_reason" type="string | null">
+  If `status` is `rejected`, this explains why: `hard-bounce`, `soft-bounce`, `spam`, `unsub`, `custom`, `invalid-sender`, `invalid`, `test-mode-limit`, `unsigned`, `rule`.
+</ResponseField>
+
+## Example
+
+```bash
+curl -X POST https://mandrillapp.com/api/1.0/messages/send \
+  -H "Content-Type: application/json" \
+  -d '{
+    "key": "YOUR_API_KEY",
+    "message": {
+      "html": "<p>Hi Jordan, your order #1043 has shipped.</p>",
+      "subject": "Your order has shipped",
+      "from_email": "orders@yourdomain.com",
+      "from_name": "Your Store",
+      "to": [
+        { "email": "jordan@example.com", "name": "Jordan Lee", "type": "to" }
+      ],
+      "track_opens": true,
+      "track_clicks": true,
+      "tags": ["order-shipped"]
+    }
+  }'
+```
+
+```json
+[
+  {
+    "email": "jordan@example.com",
+    "status": "sent",
+    "_id": "abc123abc123abc123abc123",
+    "reject_reason": null
+  }
+]
+```

@@ -1,26 +1,79 @@
 ---
-title: "Changelog"
-description: "Notable changes to the Mailchimp Transactional API."
+title: "Mailchimp Transactional API Changelog"
+sidebarTitle: "Changelog"
+description: "Version history for the Mailchimp Transactional API — covering breaking changes, new features, and bug fixes from v1.0 (Mandrill) through the current v1.3 release."
 ---
 
-<Update label="1.3" description="Released January 2026">
-  ## Version 1.3
+This changelog covers API changes across versions of Mailchimp Transactional, starting with v1.0 — the original Mandrill release — through the current v1.3 release. Entries are listed in reverse chronological order. Review the Breaking Changes section for each version before upgrading.
 
-  - Added `spam` and `reject` webhook event types.
-  - `/messages/info` now returns per-message `clicks` and `opens` counts inline.
-  - Improved `reject_reason` detail on invalid recipients.
-</Update>
+## Version 1.3 — Current
 
-<Update label="1.1" description="Released October 2025">
-  ## Version 1.1
+**Released:** 2025 Q1
 
-  - Introduced structured per-recipient send results with stable `_id` values.
-  - Added `track_clicks` granularity at the message level.
-  - First minor version release since the product re-entered active development.
-</Update>
+<AccordionGroup>
+  <Accordion title="New features">
+    - **Scheduled delivery** — the `send_at` parameter on message send requests lets you schedule delivery up to 1 year in advance.
+    - **Priority flag** — set `important: true` on a message to prioritize it over queued bulk sends.
+    - **Schedule management endpoints** — `POST /messages/reschedule` and `POST /messages/cancel-schedule` let you update or cancel a scheduled message before it is sent.
+    - **New `reject_reason` values** — `rule` (blocked by the Rules Engine) and `soft-bounce` (address previously soft-bounced) are now returned in message info responses.
+    - **IP pool management** — new dedicated IP pool endpoints: `/ips/list`, `/ips/provision`, `/ips/start-warmup`, `/ips/cancel-warmup`, `/ips/create-pool`, and `/ips/delete-pool`.
+    - **Metadata in message info** — custom metadata fields are now returned in `/messages/info` responses.
+    - **Metadata columns in activity exports** — the `/exports/activity` endpoint now includes your custom metadata columns in the exported data.
+  </Accordion>
 
-<Update label="1.0" description="Legacy">
-  ## Version 1.0
+  <Accordion title="Breaking changes">
+    - **`template_content` format change** — in `/messages/send-template`, `template_content` is now an array of `{name, content}` objects instead of a plain string.
+    - **Webhook payload update** — webhook event payloads now include `_id` at the top level, in addition to the existing `_id` field inside `msg`.
 
-  - Original Mandrill-era API. Still supported. See [Migrating from 1.0](/guides/migrating-from-1-0).
-</Update>
+    <Warning>
+      If you use `/messages/send-template`, update your `template_content` payload before upgrading. See the Migration Guide.
+    </Warning>
+  </Accordion>
+
+  <Accordion title="Bug fixes">
+    - Fixed an edge case where scheduled messages could be sent twice if a delivery server restarted during the send window.
+    - Improved accuracy of the `opens` count in `/messages/info` for messages opened on Apple Mail with Mail Privacy Protection enabled.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Version 1.1
+
+**Released:** 2024 Q2
+
+<AccordionGroup>
+  <Accordion title="New features">
+    - **Per-recipient merge variables** — you can now pass `merge_vars` in send requests to substitute different values for each recipient.
+    - **Tag filtering in exports** — the `tags` parameter in activity export requests lets you scope exports to messages with specific tags.
+    - **Webhook authentication key** — your webhook authentication key is now visible in the dashboard, making it easier to verify incoming payloads.
+    - **Denylist and allowlist management** — new endpoints `/allowlists/add`, `/allowlists/list`, and `/allowlists/delete` let you manage your sending allowlist directly via the API.
+  </Accordion>
+
+  <Accordion title="Improvements">
+    - **Webhook retry logic** — failed webhook deliveries now retry with exponential backoff over a 24-hour window, reducing the risk of missed events during temporary endpoint outages.
+    - **Dashboard activity view** — the activity view in the dashboard now supports per-tag filtering for faster message lookup.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Version 1.0 — Initial release (Mandrill)
+
+**Released:** 2023 Q3
+
+<AccordionGroup>
+  <Accordion title="Core features">
+    - `POST /messages/send` — send individual transactional messages via the API.
+    - `POST /messages/send-template` — send a message using a stored template.
+    - `POST /messages/info` — retrieve delivery status and metadata for a sent message.
+    - `POST /webhooks/list` and `POST /webhooks/add` — manage event webhook endpoints on your account.
+    - **SMTP sending** — send messages via SMTP using `X-MC-*` headers to pass API options.
+    - **Open and click tracking** — automatically track when recipients open your messages or click tracked links.
+    - **Sending domain verification** — verify your sending domains with DKIM to improve deliverability.
+  </Accordion>
+</AccordionGroup>
+
+<Note>
+  API v1.0 is no longer actively maintained. We recommend upgrading to v1.3 to access the latest features and improvements. See the Migration Guide for details.
+</Note>

@@ -1,0 +1,97 @@
+{
+  "projectType": "api-service",
+  "projectName": "Mailchimp Transactional",
+  "projectDescription": "A transactional email and SMS delivery API (formerly Mandrill) for sending triggered, one-to-one messages like password resets, order confirmations, and shipping notifications at scale.",
+  "theme": "luma",
+  "primaryColor": "#040404",
+  "lightColor": "#f35d25",
+  "darkColor": "#f7ac8b",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": [
+              "index",
+              "quickstart",
+              "authentication"
+            ]
+          },
+          {
+            "group": "Guides",
+            "pages": [
+              "guides/sending-email",
+              "guides/templates",
+              "guides/webhooks",
+              "guides/migrating-from-1-0"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "API Reference",
+        "groups": [
+          {
+            "group": "Messages",
+            "pages": [
+              "api-reference/messages/send",
+              "api-reference/messages/send-template",
+              "api-reference/messages/info"
+            ]
+          },
+          {
+            "group": "Webhooks",
+            "pages": [
+              "api-reference/webhooks/list",
+              "api-reference/webhooks/add"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Changelog",
+        "groups": [
+          {
+            "group": "Changelog",
+            "pages": [
+              "changelog"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "Send transactional emails via REST API or SMTP",
+    "Reusable templates with merge variable substitution",
+    "Real-time webhook event streaming (opens, clicks, bounces)",
+    "Per-message tracking (opens, clicks, delivery status)",
+    "Dedicated IP provisioning and warmup management",
+    "Inbound email processing and routing",
+    "Scheduled message delivery",
+    "Denylist and allowlist management",
+    "Version-based API with migration path from v1.0 to v1.3",
+    "Transactional SMS via dedicated sending numbers"
+  ],
+  "publicApiSurface": [
+    "POST /messages/send",
+    "POST /messages/send-template",
+    "POST /messages/info",
+    "POST /webhooks/list",
+    "POST /webhooks/add",
+    "POST /allowlists/add",
+    "POST /allowlists/list",
+    "POST /allowlists/delete",
+    "POST /exports/activity",
+    "POST /ips/list",
+    "POST /ips/provision",
+    "POST /ips/start-warmup",
+    "POST /inbound/domains",
+    "POST /inbound/add-domain",
+    "POST /inbound/routes",
+    "POST /messages/reschedule",
+    "POST /messages/cancel-schedule"
+  ]
+}
