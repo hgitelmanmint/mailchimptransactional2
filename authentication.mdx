@@ -1,10 +1,10 @@
 ---
-title: "Authenticate Requests to the Transactional API"
+title: "Authenticate Requests to the Mailchimp Transactional API"
 sidebarTitle: "Authentication"
 description: "Every Mailchimp Transactional request requires an API key in the request body. Learn how to generate, scope, use, and rotate your keys securely."
 ---
 
-Every request to the Mailchimp Transactional API must include a valid API key passed as the `key` field in the JSON request body. There is no OAuth flow and no session-based login — authentication is stateless and per-request. Keep your keys secret and out of client-side code.
+Every request to the Mailchimp Transactional API must include a valid API key passed as the `key` field in the JSON request body. Authentication is stateless and per-request — every call must carry the key. Keep your keys secret and out of client-side code.
 
 ## Generating a key
 
@@ -52,7 +52,7 @@ If a key is compromised — or if you simply want to rotate credentials as part 
 3. Confirm that your services are sending successfully with the new key.
 4. Delete the old key from the dashboard.
 
-Because authentication is per-request, there is no session to invalidate and no gap in delivery between the old key and the new one.
+Because authentication is per-request, switching keys takes effect immediately — there is no gap in delivery between the old key and the new one.
 
 <Warning>
   Deleting a key is permanent. Make sure your replacement is deployed and working before removing the old one.

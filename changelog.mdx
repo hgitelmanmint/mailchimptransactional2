@@ -1,7 +1,7 @@
 ---
-title: "Mailchimp Transactional API Changelog"
+title: "Mailchimp Transactional API Changelog — v1.0 to v1.3"
 sidebarTitle: "Changelog"
-description: "Version history for the Mailchimp Transactional API — covering breaking changes, new features, and bug fixes from v1.0 (Mandrill) through the current v1.3 release."
+description: "Version history for the Mailchimp Transactional API, covering breaking changes, new features, and bug fixes from v1.0 through the current v1.3."
 ---
 
 This changelog covers API changes across versions of Mailchimp Transactional, starting with v1.0 — the original Mandrill release — through the current v1.3 release. Entries are listed in reverse chronological order. Review the Breaking Changes section for each version before upgrading.
@@ -47,7 +47,7 @@ This changelog covers API changes across versions of Mailchimp Transactional, st
     - **Per-recipient merge variables** — you can now pass `merge_vars` in send requests to substitute different values for each recipient.
     - **Tag filtering in exports** — the `tags` parameter in activity export requests lets you scope exports to messages with specific tags.
     - **Webhook authentication key** — your webhook authentication key is now visible in the dashboard, making it easier to verify incoming payloads.
-    - **Denylist and allowlist management** — new endpoints `/allowlists/add`, `/allowlists/list`, and `/allowlists/delete` let you manage your sending allowlist directly via the API.
+    - **Allowlist and denylist management** — new endpoints `/allowlists/add`, `/allowlists/list`, and `/allowlists/delete` let you manage your sending allowlist via the API. Denylist management is available via `/rejects/add`, `/rejects/list`, and `/rejects/delete`.
   </Accordion>
 
   <Accordion title="Improvements">

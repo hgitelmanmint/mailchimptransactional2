@@ -1,5 +1,5 @@
 ---
-title: "Stream Email Events to Your App with Webhooks"
+title: "Receive Real-Time Email Activity Events via Webhooks"
 sidebarTitle: "Webhooks"
 description: "Set up Mailchimp Transactional webhooks to receive real-time delivery, open, click, bounce, and spam complaint events posted directly to your endpoint."
 ---
@@ -99,11 +99,29 @@ Mailchimp Transactional signs each POST request with an HMAC-SHA1 signature so y
 
 To verify a request:
 
-1. Retrieve your webhook's authentication key from its detail page in the dashboard.
-2. Concatenate the full POST body as a string.
-3. Compute an HMAC-SHA1 digest of that string using your authentication key as the secret.
-4. Base64-encode the result and compare it to the value in the `X-Mandrill-Signature` header.
-5. Reject the request if the values don't match.
+1. Retrieve your webhook's authentication key from its detail page in the dashboard (or from the `auth_key` field returned by `POST /webhooks/add` or `POST /webhooks/list`).
+2. Start with the exact webhook URL you registered — including any query string.
+3. Sort the POST parameters alphabetically by key, then append each key immediately followed by its value, with no delimiter between pairs.
+4. Compute an HMAC-SHA1 digest of the resulting string using your authentication key as the secret. Use a **binary** (not hexadecimal) digest.
+5. Base64-encode the binary digest and compare it to the value in the `X-Mandrill-Signature` header.
+6. Reject the request if the values don't match.
+
+```javascript
+const crypto = require('crypto');
+
+function generateSignature(webhookKey, webhookUrl, postParams) {
+  let signedData = webhookUrl;
+  const sortedKeys = Object.keys(postParams).sort();
+  sortedKeys.forEach(key => {
+    signedData += key + postParams[key];
+  });
+  return crypto.createHmac('sha1', webhookKey)
+    .update(signedData)
+    .digest('base64');
+}
+
+// Usage: compare result to req.headers['x-mandrill-signature']
+```
 
 <Tip>
   Your webhook authentication key is displayed on the webhook's detail page in the dashboard. Treat it as a secret — rotate it if you believe it has been compromised.

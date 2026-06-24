@@ -1,7 +1,7 @@
 ---
-title: "Send Emails Using Reusable Templates"
+title: "Using Reusable Templates to Send Personalized Emails"
 sidebarTitle: "Templates"
-description: "Create reusable email templates in the Mandrill dashboard, personalize them with merge variables, and send them via the /messages/send-template endpoint."
+description: "Create reusable email templates in the Mailchimp Transactional dashboard, personalize them with merge variables, and send via /messages/send-template."
 ---
 
 This guide covers how to create and use reusable email templates in Mailchimp Transactional, including dynamic merge variables that let you personalize each message at send time without rebuilding your HTML for every request.
@@ -103,6 +103,8 @@ curl -X POST https://mandrillapp.com/api/1.0/messages/send-template \
     }
   }'
 ```
+
+For the full list of accepted parameters, see the [/messages/send-template API reference](/api-reference/messages/send-template).
 
 ## Required fields
 

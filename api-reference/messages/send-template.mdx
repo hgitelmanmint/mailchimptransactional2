@@ -1,7 +1,7 @@
 ---
 title: "POST /messages/send-template — Send via Template"
 sidebarTitle: "Send Template"
-description: "POST /messages/send-template — send a transactional message using a stored template. Accepts template name, content slots, and merge variables."
+description: "Send a transactional email using a saved Mailchimp template. Inject content into editable regions and personalise each message with merge variables."
 ---
 
 `POST /messages/send-template` sends a message using a pre-built template from your account, injecting dynamic content into editable regions and merge variables at send time. This approach keeps your layout and branding in the template while your application supplies only the personalised data for each send.
@@ -18,7 +18,7 @@ description: "POST /messages/send-template — send a transactional message usin
   The immutable name (slug) of the template to use. Find this on the Templates page in the dashboard.
 </ParamField>
 
-<ParamField body="template_content" type="array" required>
+<ParamField body="template_content" type="array">
   Array of objects filling the template's editable `mc:edit` regions. Each object has `name` (the region name) and `content` (HTML to inject). Pass an empty array `[]` if the template has no editable regions.
 </ParamField>
 

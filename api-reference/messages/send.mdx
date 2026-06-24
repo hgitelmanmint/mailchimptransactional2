@@ -1,7 +1,7 @@
 ---
 title: "POST /messages/send — Send a Transactional Message"
 sidebarTitle: "Send Message"
-description: "POST /messages/send — send a new transactional message. Accepts a message object with recipients, HTML content, subject, tracking options."
+description: "Send a transactional email via the Mailchimp Transactional API. Specify recipients, HTML content, subject, and per-message tracking options."
 ---
 
 `POST /messages/send` is the primary endpoint for sending transactional messages. Pass a message object containing your recipients, HTML content, and delivery options; the API returns a per-recipient status array confirming the outcome for each address.
@@ -23,7 +23,7 @@ description: "POST /messages/send — send a new transactional message. Accepts 
     <ParamField body="text" type="string">
       Plain-text version. Recommended alongside HTML for accessibility and deliverability.
     </ParamField>
-    <ParamField body="subject" type="string" required>
+    <ParamField body="subject" type="string">
       The message subject line.
     </ParamField>
     <ParamField body="from_email" type="string" required>
